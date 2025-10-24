@@ -1,0 +1,334 @@
+{% extends "base.twig" %}
+
+{% block title %}Ticket #{{ ticket.id }} - {{ ticket.title }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8">
+        <!-- Ticket Details -->
+        <div class="card shadow mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h4 class="mb-0">
+                    <i class="bi bi-ticket-perforated me-2"></i>Ticket #{{ ticket.id }}
+                </h4>
+                <div>
+                    {% if user.role == 'admin' or ticket.created_by == user.id %}
+                        <a href="/tickets/{{ ticket.id }}/edit" class="btn btn-sm btn-outline-primary">
+                            <i class="bi bi-pencil me-1"></i>Edit
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="card-body">
+                <h2 class="h4 mb-3">{{ ticket.title }}</h2>
+                
+                <div class="row mb-4">
+                    <div class="col-md-3">
+                        <strong>Status:</strong><br>
+                        <span class="badge bg-{{ ticket.status == 'open' ? 'warning' : (ticket.status == 'in_progress' ? 'info' : (ticket.status == 'resolved' ? 'success' : 'secondary')) }} fs-6">
+                            {{ ticket.status|title }}
+                        </span>
+                    </div>
+                    <div class="col-md-3">
+                        <strong>Priority:</strong><br>
+                        <span class="badge bg-{{ ticket.priority == 'urgent' ? 'danger' : (ticket.priority == 'high' ? 'warning' : (ticket.priority == 'medium' ? 'info' : 'secondary')) }} fs-6">
+                            {{ ticket.priority|title }}
+                        </span>
+                    </div>
+                    <div class="col-md-3">
+                        <strong>Category:</strong><br>
+                        <span class="badge bg-light text-dark fs-6">{{ ticket.category|title }}</span>
+                    </div>
+                    <div class="col-md-3">
+                        <strong>Created:</strong><br>
+                        <span class="text-muted">{{ ticket.created_at|date('M j, Y g:i A') }}</span>
+                    </div>
+                </div>
+                
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <strong>Created by:</strong><br>
+                        <div class="d-flex align-items-center mt-1">
+                            <i class="bi bi-person-circle me-2"></i>
+                            <div>
+                                <div>{{ ticket.creator_first_name }} {{ ticket.creator_last_name }}</div>
+                                <small class="text-muted">@{{ ticket.creator_username }}</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <strong>Assigned to:</strong><br>
+                        {% if ticket.assignee_first_name %}
+                            <div class="d-flex align-items-center mt-1">
+                                <i class="bi bi-person-check me-2"></i>
+                                <div>
+                                    <div>{{ ticket.assignee_first_name }} {{ ticket.assignee_last_name }}</div>
+                                    <small class="text-muted">@{{ ticket.assignee_username }}</small>
+                                </div>
+                            </div>
+                        {% else %}
+                            <span class="text-muted mt-1">
+                                <i class="bi bi-person-x me-1"></i>Unassigned
+                            </span>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <strong>Description:</strong>
+                    <div class="mt-2 p-3 bg-light rounded">
+                        {{ ticket.description|nl2br }}
+                    </div>
+                </div>
+                
+                {% if ticket.resolved_at %}
+                <div class="alert alert-success">
+                    <i class="bi bi-check-circle me-2"></i>
+                    <strong>Resolved:</strong> {{ ticket.resolved_at|date('M j, Y g:i A') }}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Comments Section -->
+        <div class="card shadow mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-chat-dots me-2"></i>Comments
+                    <span class="badge bg-secondary ms-2">{{ comments|length }}</span>
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if comments %}
+                    {% for comment in comments %}
+                    <div class="comment mb-4 {% if not loop.last %}border-bottom pb-3{% endif %}">
+                        <div class="d-flex align-items-start">
+                            <div class="flex-shrink-0 me-3">
+                                <i class="bi bi-person-circle text-primary" style="font-size: 2rem;"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <div>
+                                        <strong>{{ comment.first_name }} {{ comment.last_name }}</strong>
+                                        <span class="text-muted ms-2">@{{ comment.username }}</span>
+                                        {% if comment.is_internal %}
+                                            <span class="badge bg-warning ms-2">Internal</span>
+                                        {% endif %}
+                                    </div>
+                                    <small class="text-muted">{{ comment.created_at|date('M j, Y g:i A') }}</small>
+                                </div>
+                                <div class="comment-content">
+                                    {{ comment.comment|nl2br }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="text-center py-4">
+                        <i class="bi bi-chat text-muted" style="font-size: 3rem;"></i>
+                        <p class="text-muted mt-2">No comments yet</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Add Comment Form -->
+        <div class="card shadow">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-plus-circle me-2"></i>Add Comment
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="/tickets/{{ ticket.id }}/comments" id="commentForm">
+                    <input type="hidden" name="{{ csrf_token_name }}" value="{{ csrf_token }}">
+                    
+                    <div class="mb-3">
+                        <label for="comment" class="form-label">Comment</label>
+                        <textarea 
+                            class="form-control" 
+                            id="comment" 
+                            name="comment" 
+                            rows="4"
+                            placeholder="Add your comment here..."
+                            required
+                        >{{ form_data.comment|default('') }}</textarea>
+                        <div class="invalid-feedback" id="comment-error"></div>
+                    </div>
+                    
+                    {% if user.role == 'admin' %}
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="is_internal" name="is_internal" value="1">
+                        <label class="form-check-label" for="is_internal">
+                            Internal comment (not visible to ticket creator)
+                        </label>
+                    </div>
+                    {% endif %}
+                    
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-send me-2"></i>Add Comment
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <!-- Quick Actions -->
+        <div class="card shadow mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-lightning me-2"></i>Quick Actions
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if user.role == 'admin' %}
+                <form method="POST" action="/tickets/{{ ticket.id }}/update" class="mb-3">
+                    <input type="hidden" name="{{ csrf_token_name }}" value="{{ csrf_token }}">
+                    <input type="hidden" name="title" value="{{ ticket.title }}">
+                    <input type="hidden" name="description" value="{{ ticket.description }}">
+                    <input type="hidden" name="priority" value="{{ ticket.priority }}">
+                    <input type="hidden" name="category" value="{{ ticket.category }}">
+                    <input type="hidden" name="assigned_to" value="{{ ticket.assigned_to }}">
+                    
+                    <div class="mb-3">
+                        <label for="quick_status" class="form-label">Status</label>
+                        <select class="form-select" id="quick_status" name="status" onchange="this.form.submit()">
+                            <option value="open" {{ ticket.status == 'open' ? 'selected' : '' }}>Open</option>
+                            <option value="in_progress" {{ ticket.status == 'in_progress' ? 'selected' : '' }}>In Progress</option>
+                            <option value="resolved" {{ ticket.status == 'resolved' ? 'selected' : '' }}>Resolved</option>
+                            <option value="closed" {{ ticket.status == 'closed' ? 'selected' : '' }}>Closed</option>
+                        </select>
+                    </div>
+                </form>
+                
+                <form method="POST" action="/tickets/{{ ticket.id }}/update">
+                    <input type="hidden" name="{{ csrf_token_name }}" value="{{ csrf_token }}">
+                    <input type="hidden" name="title" value="{{ ticket.title }}">
+                    <input type="hidden" name="description" value="{{ ticket.description }}">
+                    <input type="hidden" name="status" value="{{ ticket.status }}">
+                    <input type="hidden" name="priority" value="{{ ticket.priority }}">
+                    <input type="hidden" name="category" value="{{ ticket.category }}">
+                    
+                    <div class="mb-3">
+                        <label for="quick_assigned" class="form-label">Assign To</label>
+                        <select class="form-select" id="quick_assigned" name="assigned_to" onchange="this.form.submit()">
+                            <option value="">Unassigned</option>
+                            {% for userOption in users %}
+                                <option value="{{ userOption.id }}" {{ ticket.assigned_to == userOption.id ? 'selected' : '' }}>
+                                    {{ userOption.first_name }} {{ userOption.last_name }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </form>
+                {% endif %}
+                
+                <div class="d-grid gap-2">
+                    <a href="/tickets" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left me-2"></i>Back to Tickets
+                    </a>
+                    {% if user.role == 'admin' or ticket.created_by == user.id %}
+                        <a href="/tickets/{{ ticket.id }}/edit" class="btn btn-outline-primary">
+                            <i class="bi bi-pencil me-2"></i>Edit Ticket
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Ticket Info -->
+        <div class="card shadow mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-info-circle me-2"></i>Ticket Information
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <strong>Ticket ID:</strong><br>
+                    <span class="text-muted">#{{ ticket.id }}</span>
+                </div>
+                
+                <div class="mb-3">
+                    <strong>Created:</strong><br>
+                    <span class="text-muted">{{ ticket.created_at|date('M j, Y g:i A') }}</span>
+                </div>
+                
+                <div class="mb-3">
+                    <strong>Last Updated:</strong><br>
+                    <span class="text-muted">{{ ticket.updated_at|date('M j, Y g:i A') }}</span>
+                </div>
+                
+                {% if ticket.resolved_at %}
+                <div class="mb-3">
+                    <strong>Resolved:</strong><br>
+                    <span class="text-muted">{{ ticket.resolved_at|date('M j, Y g:i A') }}</span>
+                </div>
+                {% endif %}
+                
+                {% if ticket.closed_at %}
+                <div class="mb-3">
+                    <strong>Closed:</strong><br>
+                    <span class="text-muted">{{ ticket.closed_at|date('M j, Y g:i A') }}</span>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Attachments -->
+        {% if attachments %}
+        <div class="card shadow">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-paperclip me-2"></i>Attachments
+                    <span class="badge bg-secondary ms-2">{{ attachments|length }}</span>
+                </h5>
+            </div>
+            <div class="card-body">
+                {% for attachment in attachments %}
+                <div class="d-flex align-items-center mb-2">
+                    <i class="bi bi-file-earmark me-2"></i>
+                    <div class="flex-grow-1">
+                        <div class="fw-medium">{{ attachment.original_filename }}</div>
+                        <small class="text-muted">
+                            {{ attachment.file_size|number_format }} bytes • 
+                            {{ attachment.created_at|date('M j, Y') }}
+                        </small>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const commentForm = document.getElementById('commentForm');
+    
+    commentForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const comment = document.getElementById('comment').value.trim();
+        
+        if (!comment) {
+            document.getElementById('comment').classList.add('is-invalid');
+            document.getElementById('comment-error').textContent = 'Comment is required';
+            return;
+        }
+        
+        // Clear any previous errors
+        document.getElementById('comment').classList.remove('is-invalid');
+        document.getElementById('comment-error').textContent = '';
+        
+        // Submit form
+        this.submit();
+    });
+});
+</script>
+{% endblock %}

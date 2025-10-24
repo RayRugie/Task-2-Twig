@@ -1,0 +1,465 @@
+{% extends "base.twig" %}
+
+{% block title %}Dashboard - {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 mb-0">
+        <i class="bi bi-speedometer2 me-2"></i>Dashboard
+    </h1>
+    <div>
+        <a href="/tickets/create" class="btn btn-primary">
+            <i class="bi bi-plus-circle me-2"></i>New Ticket
+        </a>
+    </div>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row g-4 mb-4">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="card-title text-white-50">Total Tickets</h6>
+                        <h3 class="mb-0">{{ stats.total_tickets }}</h3>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="bi bi-ticket-perforated" style="font-size: 2rem;"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card bg-warning text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="card-title text-white-50">Open</h6>
+                        <h3 class="mb-0">{{ stats.open_tickets }}</h3>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="bi bi-clock" style="font-size: 2rem;"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card bg-info text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="card-title text-white-50">In Progress</h6>
+                        <h3 class="mb-0">{{ stats.in_progress_tickets }}</h3>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="bi bi-arrow-repeat" style="font-size: 2rem;"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="card-title text-white-50">Resolved</h6>
+                        <h3 class="mb-0">{{ stats.resolved_tickets }}</h3>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="bi bi-check-circle" style="font-size: 2rem;"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Additional Stats for Admin -->
+{% if user.role == 'admin' %}
+<div class="row g-4 mb-4">
+    <div class="col-md-4">
+        <div class="card bg-danger text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="card-title text-white-50">High Priority</h6>
+                        <h3 class="mb-0">{{ stats.high_priority_tickets }}</h3>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="bi bi-exclamation-triangle" style="font-size: 2rem;"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card bg-secondary text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="card-title text-white-50">Closed</h6>
+                        <h3 class="mb-0">{{ stats.closed_tickets }}</h3>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="bi bi-archive" style="font-size: 2rem;"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card bg-dark text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="card-title text-white-50">My Created</h6>
+                        <h3 class="mb-0">{{ stats.my_created_tickets }}</h3>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="bi bi-person-plus" style="font-size: 2rem;"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% else %}
+<!-- User-specific stats -->
+<div class="row g-4 mb-4">
+    <div class="col-md-6">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="card-title text-white-50">My Assigned</h6>
+                        <h3 class="mb-0">{{ stats.my_assigned_tickets }}</h3>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="bi bi-person-check" style="font-size: 2rem;"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card bg-info text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="card-title text-white-50">My Created</h6>
+                        <h3 class="mb-0">{{ stats.my_created_tickets }}</h3>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="bi bi-person-plus" style="font-size: 2rem;"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Charts Section -->
+<div class="row g-4 mb-4">
+    <div class="col-lg-6">
+        <div class="card shadow">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-pie-chart me-2"></i>Status Distribution
+                </h5>
+            </div>
+            <div class="card-body">
+                <canvas id="statusChart" height="300"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-6">
+        <div class="card shadow">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-bar-chart me-2"></i>Priority Distribution
+                </h5>
+            </div>
+            <div class="card-body">
+                <canvas id="priorityChart" height="300"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Additional Charts for Admin -->
+{% if user.role == 'admin' %}
+<div class="row g-4 mb-4">
+    <div class="col-lg-6">
+        <div class="card shadow">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-graph-up me-2"></i>Tickets Over Time
+                </h5>
+            </div>
+            <div class="card-body">
+                <canvas id="timeChart" height="300"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-6">
+        <div class="card shadow">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-tags me-2"></i>Category Distribution
+                </h5>
+            </div>
+            <div class="card-body">
+                <canvas id="categoryChart" height="300"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Recent Tickets -->
+<div class="row">
+    <div class="col-12">
+        <div class="card shadow">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="bi bi-clock-history me-2"></i>Recent Tickets
+                </h5>
+                <a href="/tickets" class="btn btn-sm btn-outline-primary">View All</a>
+            </div>
+            <div class="card-body">
+                {% if recent_tickets %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Title</th>
+                                    <th>Status</th>
+                                    <th>Priority</th>
+                                    <th>Created By</th>
+                                    <th>Assigned To</th>
+                                    <th>Created</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for ticket in recent_tickets %}
+                                <tr>
+                                    <td>
+                                        <span class="badge bg-secondary">#{{ ticket.id }}</span>
+                                    </td>
+                                    <td>
+                                        <a href="/tickets/{{ ticket.id }}" class="text-decoration-none">
+                                            {{ ticket.title|length > 50 ? ticket.title|slice(0, 50) ~ '...' : ticket.title }}
+                                        </a>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-{{ ticket.status == 'open' ? 'warning' : (ticket.status == 'in_progress' ? 'info' : (ticket.status == 'resolved' ? 'success' : 'secondary')) }}">
+                                            {{ ticket.status|title }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-{{ ticket.priority == 'urgent' ? 'danger' : (ticket.priority == 'high' ? 'warning' : (ticket.priority == 'medium' ? 'info' : 'secondary')) }}">
+                                            {{ ticket.priority|title }}
+                                        </span>
+                                    </td>
+                                    <td>{{ ticket.creator_first_name }} {{ ticket.creator_last_name }}</td>
+                                    <td>
+                                        {% if ticket.assignee_first_name %}
+                                            {{ ticket.assignee_first_name }} {{ ticket.assignee_last_name }}
+                                        {% else %}
+                                            <span class="text-muted">Unassigned</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ ticket.created_at|date('M j, Y') }}</td>
+                                    <td>
+                                        <a href="/tickets/{{ ticket.id }}" class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center py-4">
+                        <i class="bi bi-inbox text-muted" style="font-size: 3rem;"></i>
+                        <p class="text-muted mt-2">No tickets found</p>
+                        <a href="/tickets/create" class="btn btn-primary">Create Your First Ticket</a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Chart data from server
+    const chartData = {{ chart_data|json_encode|raw }};
+    
+    // Status Distribution Chart (Doughnut)
+    const statusCtx = document.getElementById('statusChart').getContext('2d');
+    new Chart(statusCtx, {
+        type: 'doughnut',
+        data: {
+            labels: chartData.status_distribution.labels,
+            datasets: [{
+                data: chartData.status_distribution.data,
+                backgroundColor: [
+                    '#ffc107', // Open - Warning
+                    '#0dcaf0', // In Progress - Info
+                    '#198754', // Resolved - Success
+                    '#6c757d'  // Closed - Secondary
+                ],
+                borderWidth: 2,
+                borderColor: '#fff'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+    
+    // Priority Distribution Chart (Bar)
+    const priorityCtx = document.getElementById('priorityChart').getContext('2d');
+    new Chart(priorityCtx, {
+        type: 'bar',
+        data: {
+            labels: chartData.priority_distribution.labels,
+            datasets: [{
+                label: 'Tickets',
+                data: chartData.priority_distribution.data,
+                backgroundColor: [
+                    '#6c757d', // Low - Secondary
+                    '#0dcaf0', // Medium - Info
+                    '#ffc107', // High - Warning
+                    '#dc3545'  // Urgent - Danger
+                ],
+                borderWidth: 1,
+                borderColor: '#fff'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        stepSize: 1
+                    }
+                }
+            }
+        }
+    });
+    
+    {% if user.role == 'admin' %}
+    // Tickets Over Time Chart (Line)
+    const timeCtx = document.getElementById('timeChart').getContext('2d');
+    new Chart(timeCtx, {
+        type: 'line',
+        data: {
+            labels: chartData.tickets_over_time.labels,
+            datasets: [{
+                label: 'Tickets Created',
+                data: chartData.tickets_over_time.data,
+                borderColor: '#0d6efd',
+                backgroundColor: 'rgba(13, 110, 253, 0.1)',
+                borderWidth: 2,
+                fill: true,
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        stepSize: 1
+                    }
+                }
+            }
+        }
+    });
+    
+    // Category Distribution Chart (Horizontal Bar)
+    const categoryCtx = document.getElementById('categoryChart').getContext('2d');
+    new Chart(categoryCtx, {
+        type: 'bar',
+        data: {
+            labels: chartData.category_distribution.labels,
+            datasets: [{
+                label: 'Tickets',
+                data: chartData.category_distribution.data,
+                backgroundColor: '#17a2b8',
+                borderWidth: 1,
+                borderColor: '#fff'
+            }]
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                x: {
+                    beginAtZero: true,
+                    ticks: {
+                        stepSize: 1
+                    }
+                }
+            }
+        }
+    });
+    {% endif %}
+    
+    // Store dashboard filters in localStorage
+    const dashboardFilters = {
+        chartType: 'status',
+        dateRange: '30d',
+        lastUpdated: new Date().toISOString()
+    };
+    
+    localStorage.setItem('dashboardFilters', JSON.stringify(dashboardFilters));
+});
+</script>
+{% endblock %}

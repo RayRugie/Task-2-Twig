@@ -1,0 +1,280 @@
+{% extends "base.twig" %}
+
+{% block title %}Create New Ticket - {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card shadow">
+            <div class="card-header">
+                <h4 class="mb-0">
+                    <i class="bi bi-plus-circle me-2"></i>Create New Ticket
+                </h4>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="/tickets" id="createTicketForm" novalidate>
+                    <input type="hidden" name="{{ csrf_token_name }}" value="{{ csrf_token }}">
+                    
+                    <div class="mb-3">
+                        <label for="title" class="form-label">Title <span class="text-danger">*</span></label>
+                        <input 
+                            type="text" 
+                            class="form-control" 
+                            id="title" 
+                            name="title" 
+                            value="{{ form_data.title|default('') }}"
+                            placeholder="Brief description of the issue"
+                            required
+                            maxlength="200"
+                        >
+                        <div class="invalid-feedback" id="title-error"></div>
+                        <div class="form-text">Keep it concise but descriptive</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Description <span class="text-danger">*</span></label>
+                        <textarea 
+                            class="form-control" 
+                            id="description" 
+                            name="description" 
+                            rows="6"
+                            placeholder="Provide detailed information about the issue, including steps to reproduce if applicable"
+                            required
+                        >{{ form_data.description|default('') }}</textarea>
+                        <div class="invalid-feedback" id="description-error"></div>
+                        <div class="form-text">The more details you provide, the faster we can help you</div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="priority" class="form-label">Priority <span class="text-danger">*</span></label>
+                                <select class="form-select" id="priority" name="priority" required>
+                                    <option value="">Select Priority</option>
+                                    <option value="low" {{ form_data.priority == 'low' ? 'selected' : '' }}>
+                                        Low - General questions or minor issues
+                                    </option>
+                                    <option value="medium" {{ form_data.priority == 'medium' ? 'selected' : '' }}>
+                                        Medium - Standard support request
+                                    </option>
+                                    <option value="high" {{ form_data.priority == 'high' ? 'selected' : '' }}>
+                                        High - Important issue affecting work
+                                    </option>
+                                    <option value="urgent" {{ form_data.priority == 'urgent' ? 'selected' : '' }}>
+                                        Urgent - Critical issue requiring immediate attention
+                                    </option>
+                                </select>
+                                <div class="invalid-feedback" id="priority-error"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="category" class="form-label">Category <span class="text-danger">*</span></label>
+                                <select class="form-select" id="category" name="category" required>
+                                    <option value="">Select Category</option>
+                                    <option value="bug" {{ form_data.category == 'bug' ? 'selected' : '' }}>
+                                        Bug Report
+                                    </option>
+                                    <option value="feature" {{ form_data.category == 'feature' ? 'selected' : '' }}>
+                                        Feature Request
+                                    </option>
+                                    <option value="support" {{ form_data.category == 'support' ? 'selected' : '' }}>
+                                        Technical Support
+                                    </option>
+                                    <option value="access" {{ form_data.category == 'access' ? 'selected' : '' }}>
+                                        Access Request
+                                    </option>
+                                    <option value="software" {{ form_data.category == 'software' ? 'selected' : '' }}>
+                                        Software Installation
+                                    </option>
+                                    <option value="hardware" {{ form_data.category == 'hardware' ? 'selected' : '' }}>
+                                        Hardware Issue
+                                    </option>
+                                    <option value="general" {{ form_data.category == 'general' ? 'selected' : '' }}>
+                                        General Inquiry
+                                    </option>
+                                </select>
+                                <div class="invalid-feedback" id="category-error"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {% if user.role == 'admin' %}
+                    <div class="mb-3">
+                        <label for="assigned_to" class="form-label">Assign To</label>
+                        <select class="form-select" id="assigned_to" name="assigned_to">
+                            <option value="">Unassigned</option>
+                            {% for userOption in users %}
+                                <option value="{{ userOption.id }}" {{ form_data.assigned_to == userOption.id ? 'selected' : '' }}>
+                                    {{ userOption.first_name }} {{ userOption.last_name }} (@{{ userOption.username }})
+                                </option>
+                            {% endfor %}
+                        </select>
+                        <div class="form-text">Leave unassigned to be picked up by available team members</div>
+                    </div>
+                    {% endif %}
+
+                    <div class="mb-3">
+                        <label class="form-label">Additional Information</label>
+                        <div class="form-text">
+                            <i class="bi bi-info-circle me-1"></i>
+                            Once created, you'll be able to add comments, attachments, and track the progress of your ticket.
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between">
+                        <a href="/tickets" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left me-2"></i>Back to Tickets
+                        </a>
+                        <button type="submit" class="btn btn-primary" id="submitBtn">
+                            <i class="bi bi-check-circle me-2"></i>Create Ticket
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Help Section -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-question-circle me-2"></i>Need Help?
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Priority Guidelines</h6>
+                        <ul class="list-unstyled">
+                            <li><span class="badge bg-secondary me-2">Low</span>General questions, minor issues</li>
+                            <li><span class="badge bg-info me-2">Medium</span>Standard support requests</li>
+                            <li><span class="badge bg-warning me-2">High</span>Important issues affecting work</li>
+                            <li><span class="badge bg-danger me-2">Urgent</span>Critical issues requiring immediate attention</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Tips for Better Support</h6>
+                        <ul class="list-unstyled">
+                            <li><i class="bi bi-check text-success me-2"></i>Be specific and detailed</li>
+                            <li><i class="bi bi-check text-success me-2"></i>Include error messages if any</li>
+                            <li><i class="bi bi-check text-success me-2"></i>Mention what you were trying to do</li>
+                            <li><i class="bi bi-check text-success me-2"></i>Provide steps to reproduce the issue</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('createTicketForm');
+    const submitBtn = document.getElementById('submitBtn');
+    const titleInput = document.getElementById('title');
+    const descriptionInput = document.getElementById('description');
+
+    // Character counter for title
+    titleInput.addEventListener('input', function() {
+        const maxLength = 200;
+        const currentLength = this.value.length;
+        const remaining = maxLength - currentLength;
+        
+        let counter = document.getElementById('title-counter');
+        if (!counter) {
+            counter = document.createElement('div');
+            counter.id = 'title-counter';
+            counter.className = 'form-text';
+            titleInput.parentNode.appendChild(counter);
+        }
+        
+        counter.textContent = `${currentLength}/${maxLength} characters`;
+        
+        if (remaining < 20) {
+            counter.className = 'form-text text-warning';
+        } else {
+            counter.className = 'form-text';
+        }
+    });
+
+    // Form validation
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        // Clear previous errors
+        clearErrors();
+        
+        let isValid = true;
+        
+        // Validate title
+        const title = titleInput.value.trim();
+        if (!title) {
+            showError('title', 'Title is required');
+            isValid = false;
+        } else if (title.length < 5) {
+            showError('title', 'Title must be at least 5 characters long');
+            isValid = false;
+        } else if (title.length > 200) {
+            showError('title', 'Title must be less than 200 characters');
+            isValid = false;
+        }
+        
+        // Validate description
+        const description = descriptionInput.value.trim();
+        if (!description) {
+            showError('description', 'Description is required');
+            isValid = false;
+        } else if (description.length < 10) {
+            showError('description', 'Description must be at least 10 characters long');
+            isValid = false;
+        }
+        
+        // Validate priority
+        const priority = document.getElementById('priority').value;
+        if (!priority) {
+            showError('priority', 'Please select a priority level');
+            isValid = false;
+        }
+        
+        // Validate category
+        const category = document.getElementById('category').value;
+        if (!category) {
+            showError('category', 'Please select a category');
+            isValid = false;
+        }
+        
+        if (isValid) {
+            // Show loading state
+            submitBtn.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>Creating Ticket...';
+            submitBtn.disabled = true;
+            
+            // Submit form
+            form.submit();
+        }
+    });
+
+    function showError(field, message) {
+        const input = document.getElementById(field);
+        const errorDiv = document.getElementById(field + '-error');
+        
+        input.classList.add('is-invalid');
+        errorDiv.textContent = message;
+    }
+
+    function clearErrors() {
+        const inputs = form.querySelectorAll('.form-control, .form-select');
+        inputs.forEach(input => {
+            input.classList.remove('is-invalid');
+        });
+        
+        const errorDivs = form.querySelectorAll('.invalid-feedback');
+        errorDivs.forEach(div => {
+            div.textContent = '';
+        });
+    }
+});
+</script>
+{% endblock %}

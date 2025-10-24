@@ -1,0 +1,204 @@
+{% extends "base.twig" %}
+
+{% block title %}Edit Ticket #{{ ticket.id }} - {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card shadow">
+            <div class="card-header">
+                <h4 class="mb-0">
+                    <i class="bi bi-pencil me-2"></i>Edit Ticket #{{ ticket.id }}
+                </h4>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="/tickets/{{ ticket.id }}/update" id="editTicketForm" novalidate>
+                    <input type="hidden" name="{{ csrf_token_name }}" value="{{ csrf_token }}">
+                    
+                    <div class="mb-3">
+                        <label for="title" class="form-label">Title <span class="text-danger">*</span></label>
+                        <input 
+                            type="text" 
+                            class="form-control" 
+                            id="title" 
+                            name="title" 
+                            value="{{ form_data.title|default(ticket.title) }}"
+                            required
+                            maxlength="200"
+                        >
+                        <div class="invalid-feedback" id="title-error"></div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Description <span class="text-danger">*</span></label>
+                        <textarea 
+                            class="form-control" 
+                            id="description" 
+                            name="description" 
+                            rows="6"
+                            required
+                        >{{ form_data.description|default(ticket.description) }}</textarea>
+                        <div class="invalid-feedback" id="description-error"></div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="mb-3">
+                                <label for="status" class="form-label">Status <span class="text-danger">*</span></label>
+                                <select class="form-select" id="status" name="status" required>
+                                    <option value="open" {{ (form_data.status|default(ticket.status)) == 'open' ? 'selected' : '' }}>Open</option>
+                                    <option value="in_progress" {{ (form_data.status|default(ticket.status)) == 'in_progress' ? 'selected' : '' }}>In Progress</option>
+                                    <option value="resolved" {{ (form_data.status|default(ticket.status)) == 'resolved' ? 'selected' : '' }}>Resolved</option>
+                                    <option value="closed" {{ (form_data.status|default(ticket.status)) == 'closed' ? 'selected' : '' }}>Closed</option>
+                                </select>
+                                <div class="invalid-feedback" id="status-error"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-3">
+                            <div class="mb-3">
+                                <label for="priority" class="form-label">Priority <span class="text-danger">*</span></label>
+                                <select class="form-select" id="priority" name="priority" required>
+                                    <option value="low" {{ (form_data.priority|default(ticket.priority)) == 'low' ? 'selected' : '' }}>Low</option>
+                                    <option value="medium" {{ (form_data.priority|default(ticket.priority)) == 'medium' ? 'selected' : '' }}>Medium</option>
+                                    <option value="high" {{ (form_data.priority|default(ticket.priority)) == 'high' ? 'selected' : '' }}>High</option>
+                                    <option value="urgent" {{ (form_data.priority|default(ticket.priority)) == 'urgent' ? 'selected' : '' }}>Urgent</option>
+                                </select>
+                                <div class="invalid-feedback" id="priority-error"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-3">
+                            <div class="mb-3">
+                                <label for="category" class="form-label">Category <span class="text-danger">*</span></label>
+                                <select class="form-select" id="category" name="category" required>
+                                    <option value="bug" {{ (form_data.category|default(ticket.category)) == 'bug' ? 'selected' : '' }}>Bug Report</option>
+                                    <option value="feature" {{ (form_data.category|default(ticket.category)) == 'feature' ? 'selected' : '' }}>Feature Request</option>
+                                    <option value="support" {{ (form_data.category|default(ticket.category)) == 'support' ? 'selected' : '' }}>Technical Support</option>
+                                    <option value="access" {{ (form_data.category|default(ticket.category)) == 'access' ? 'selected' : '' }}>Access Request</option>
+                                    <option value="software" {{ (form_data.category|default(ticket.category)) == 'software' ? 'selected' : '' }}>Software Installation</option>
+                                    <option value="hardware" {{ (form_data.category|default(ticket.category)) == 'hardware' ? 'selected' : '' }}>Hardware Issue</option>
+                                    <option value="general" {{ (form_data.category|default(ticket.category)) == 'general' ? 'selected' : '' }}>General Inquiry</option>
+                                </select>
+                                <div class="invalid-feedback" id="category-error"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-3">
+                            <div class="mb-3">
+                                <label for="assigned_to" class="form-label">Assign To</label>
+                                <select class="form-select" id="assigned_to" name="assigned_to">
+                                    <option value="">Unassigned</option>
+                                    {% for userOption in users %}
+                                        <option value="{{ userOption.id }}" {{ (form_data.assigned_to|default(ticket.assigned_to)) == userOption.id ? 'selected' : '' }}>
+                                            {{ userOption.first_name }} {{ userOption.last_name }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between">
+                        <a href="/tickets/{{ ticket.id }}" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left me-2"></i>Cancel
+                        </a>
+                        <button type="submit" class="btn btn-primary" id="submitBtn">
+                            <i class="bi bi-check-circle me-2"></i>Update Ticket
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('editTicketForm');
+    const submitBtn = document.getElementById('submitBtn');
+
+    // Form validation
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        // Clear previous errors
+        clearErrors();
+        
+        let isValid = true;
+        
+        // Validate title
+        const title = document.getElementById('title').value.trim();
+        if (!title) {
+            showError('title', 'Title is required');
+            isValid = false;
+        } else if (title.length < 5) {
+            showError('title', 'Title must be at least 5 characters long');
+            isValid = false;
+        }
+        
+        // Validate description
+        const description = document.getElementById('description').value.trim();
+        if (!description) {
+            showError('description', 'Description is required');
+            isValid = false;
+        } else if (description.length < 10) {
+            showError('description', 'Description must be at least 10 characters long');
+            isValid = false;
+        }
+        
+        // Validate status
+        const status = document.getElementById('status').value;
+        if (!status) {
+            showError('status', 'Please select a status');
+            isValid = false;
+        }
+        
+        // Validate priority
+        const priority = document.getElementById('priority').value;
+        if (!priority) {
+            showError('priority', 'Please select a priority level');
+            isValid = false;
+        }
+        
+        // Validate category
+        const category = document.getElementById('category').value;
+        if (!category) {
+            showError('category', 'Please select a category');
+            isValid = false;
+        }
+        
+        if (isValid) {
+            // Show loading state
+            submitBtn.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>Updating...';
+            submitBtn.disabled = true;
+            
+            // Submit form
+            form.submit();
+        }
+    });
+
+    function showError(field, message) {
+        const input = document.getElementById(field);
+        const errorDiv = document.getElementById(field + '-error');
+        
+        input.classList.add('is-invalid');
+        errorDiv.textContent = message;
+    }
+
+    function clearErrors() {
+        const inputs = form.querySelectorAll('.form-control, .form-select');
+        inputs.forEach(input => {
+            input.classList.remove('is-invalid');
+        });
+        
+        const errorDivs = form.querySelectorAll('.invalid-feedback');
+        errorDivs.forEach(div => {
+            div.textContent = '';
+        });
+    }
+});
+</script>
+{% endblock %}
