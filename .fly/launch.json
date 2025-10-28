@@ -1,0 +1,15 @@
+{
+  "version": "1.0",
+  "appName": "ticketa",
+  "primaryRegion": "iad",
+  "config": {
+    "build": {
+      "dockerfile": "Dockerfile"
+    },
+    "env": {
+      "APP_ENV": "production",
+      "APP_DEBUG": "false"
+    }
+  }
+}
+

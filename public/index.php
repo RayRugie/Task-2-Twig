@@ -9,9 +9,22 @@
 // Start output buffering to prevent any accidental output
 ob_start();
 
-// Set error reporting for development (remove in production)
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
+// Include Composer autoloader early (needed for environment variables)
+require_once dirname(__DIR__) . '/vendor/autoload.php';
+
+// Load configuration to get APP_DEBUG setting
+$appEnv = $_ENV['APP_ENV'] ?? getenv('APP_ENV') ?: 'development';
+$appDebug = isset($_ENV['APP_DEBUG']) ? ($_ENV['APP_DEBUG'] === 'true') : 
+            (getenv('APP_DEBUG') ? (getenv('APP_DEBUG') === 'true') : true);
+
+// Set error reporting based on environment
+if ($appDebug) {
+    error_reporting(E_ALL);
+    ini_set('display_errors', 1);
+} else {
+    error_reporting(E_ALL & ~E_DEPRECATED & ~E_STRICT);
+    ini_set('display_errors', 0);
+}
 
 // Define application constants
 define('APP_ROOT', dirname(__DIR__));
@@ -19,9 +32,6 @@ define('PUBLIC_PATH', __DIR__);
 define('CONFIG_PATH', APP_ROOT . '/config');
 define('TEMPLATES_PATH', APP_ROOT . '/templates');
 define('VIEWS_PATH', APP_ROOT . '/views');
-
-// Include Composer autoloader
-require_once APP_ROOT . '/vendor/autoload.php';
 
 // Include application configuration
 require_once CONFIG_PATH . '/app.php';

@@ -7,15 +7,20 @@
  */
 
 // Application settings
-define('APP_NAME', 'Ticketa');
-define('APP_VERSION', '1.0.0');
-define('APP_DEBUG', true); // Set to false in production
-define('APP_URL', 'http://localhost:8000'); // Update this for your environment
+// Support environment variables for deployment (Fly.io, Heroku, etc.)
+$appEnv = $_ENV['APP_ENV'] ?? getenv('APP_ENV') ?: 'development';
+$appDebug = ($_ENV['APP_DEBUG'] ?? getenv('APP_DEBUG') ?: 'true') === 'true';
 
-// Supabase settings
-define('SUPABASE_URL', getenv('SUPABASE_URL') ?: 'https://zarjztnhyohmtqsxwtxx.supabase.co');
-define('SUPABASE_ANON_KEY', getenv('SUPABASE_ANON_KEY') ?: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inphcmp6dG5oeW9obXRxc3h3dHh4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjEyODU1MTksImV4cCI6MjA3Njg2MTUxOX0.axhIv5N0ZhvIH8NpPvX49BSym_CLLhlETo7ZMEz9ypE');
-define('SUPABASE_SERVICE_ROLE_KEY', getenv('SUPABASE_SERVICE_ROLE_KEY') ?: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inphcmp6dG5oeW9obXRxc3h3dHh4Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2MTI4NTUxOSwiZXhwIjoyMDc2ODYxNTE5fQ.e3A5HrDrHV9M-DA2Vb_RJa8DxSKmuRAWf6glrLhtt5o');
+define('APP_NAME', $_ENV['APP_NAME'] ?? getenv('APP_NAME') ?: 'Ticketa');
+define('APP_VERSION', '1.0.0');
+define('APP_ENV', $appEnv);
+define('APP_DEBUG', $appDebug);
+define('APP_URL', $_ENV['APP_URL'] ?? getenv('APP_URL') ?: 'http://localhost:8000');
+
+// Supabase settings - Support environment variables for production deployment
+define('SUPABASE_URL', $_ENV['SUPABASE_URL'] ?? getenv('SUPABASE_URL') ?: 'https://zarjztnhyohmtqsxwtxx.supabase.co');
+define('SUPABASE_ANON_KEY', $_ENV['SUPABASE_ANON_KEY'] ?? getenv('SUPABASE_ANON_KEY') ?: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inphcmp6dG5oeW9obXRxc3h3dHh4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjEyODU1MTksImV4cCI6MjA3Njg2MTUxOX0.axhIv5N0ZhvIH8NpPvX49BSym_CLLhlETo7ZMEz9ypE');
+define('SUPABASE_SERVICE_ROLE_KEY', $_ENV['SUPABASE_SERVICE_ROLE_KEY'] ?? getenv('SUPABASE_SERVICE_ROLE_KEY') ?: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inphcmp6dG5oeW9obXRxc3h3dHh4Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2MTI4NTUxOSwiZXhwIjoyMDc2ODYxNTE5fQ.e3A5HrDrHV9M-DA2Vb_RJa8DxSKmuRAWf6glrLhtt5o');
 
 // Security settings
 define('CSRF_TOKEN_NAME', '_token');

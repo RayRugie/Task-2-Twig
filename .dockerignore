@@ -1,0 +1,15 @@
+.git
+.gitignore
+node_modules
+vendor
+*.md
+debug-*.php
+test-*.php
+verify.php
+demo.php
+final-test.php
+setup.php
+setup-database.php
+config/database.example.php
+views
+
