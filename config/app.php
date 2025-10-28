@@ -17,10 +17,27 @@ define('APP_ENV', $appEnv);
 define('APP_DEBUG', $appDebug);
 define('APP_URL', $_ENV['APP_URL'] ?? getenv('APP_URL') ?: 'http://localhost:8000');
 
+// Load .env file if it exists (local development)
+if (file_exists(APP_ROOT . '/.env')) {
+    $envFile = file_get_contents(APP_ROOT . '/.env');
+    $lines = explode("\n", $envFile);
+    foreach ($lines as $line) {
+        $line = trim($line);
+        if (empty($line) || strpos($line, '#') === 0) continue;
+        if (strpos($line, '=') !== false) {
+            list($key, $value) = explode('=', $line, 2);
+            $key = trim($key);
+            $value = trim($value);
+            $_ENV[$key] = $value;
+        }
+    }
+}
+
 // Supabase settings - Support environment variables for production deployment
-define('SUPABASE_URL', $_ENV['SUPABASE_URL'] ?? getenv('SUPABASE_URL') ?: 'https://zarjztnhyohmtqsxwtxx.supabase.co');
-define('SUPABASE_ANON_KEY', $_ENV['SUPABASE_ANON_KEY'] ?? getenv('SUPABASE_ANON_KEY') ?: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inphcmp6dG5oeW9obXRxc3h3dHh4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjEyODU1MTksImV4cCI6MjA3Njg2MTUxOX0.axhIv5N0ZhvIH8NpPvX49BSym_CLLhlETo7ZMEz9ypE');
-define('SUPABASE_SERVICE_ROLE_KEY', $_ENV['SUPABASE_SERVICE_ROLE_KEY'] ?? getenv('SUPABASE_SERVICE_ROLE_KEY') ?: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inphcmp6dG5oeW9obXRxc3h3dHh4Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2MTI4NTUxOSwiZXhwIjoyMDc2ODYxNTE5fQ.e3A5HrDrHV9M-DA2Vb_RJa8DxSKmuRAWf6glrLhtt5o');
+// Priority: .env file → $_ENV → getenv() → fallback to empty (will error if not set)
+define('SUPABASE_URL', $_ENV['SUPABASE_URL'] ?? getenv('SUPABASE_URL') ?: '');
+define('SUPABASE_ANON_KEY', $_ENV['SUPABASE_ANON_KEY'] ?? getenv('SUPABASE_ANON_KEY') ?: '');
+define('SUPABASE_SERVICE_ROLE_KEY', $_ENV['SUPABASE_SERVICE_ROLE_KEY'] ?? getenv('SUPABASE_SERVICE_ROLE_KEY') ?: '');
 
 // Security settings
 define('CSRF_TOKEN_NAME', '_token');
