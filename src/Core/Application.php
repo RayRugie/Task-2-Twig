@@ -19,6 +19,18 @@ class Application
     
     public function __construct()
     {
+        // Initialize session
+        Session::start();
+        
+        // Initialize Supabase (will auto-initialize)
+        try {
+            SupabaseClient::getInstance();
+        } catch (\Exception $e) {
+            if (APP_DEBUG) {
+                error_log('Supabase initialization error: ' . $e->getMessage());
+            }
+        }
+        
         $this->initializeTwig();
         $this->registerRoutes();
     }
@@ -123,6 +135,7 @@ class Application
         }
         
         // Check for parameterized routes
+        $params = [];
         foreach ($this->routes[$requestMethod] ?? [] as $route => $handler) {
             if ($this->matchRoute($route, $requestUri, $params)) {
                 $this->handleRoute($handler, $params);

@@ -48,7 +48,6 @@
                                 <select class="form-select" id="status" name="status" required>
                                     <option value="open" {{ (form_data.status|default(ticket.status)) == 'open' ? 'selected' : '' }}>Open</option>
                                     <option value="in_progress" {{ (form_data.status|default(ticket.status)) == 'in_progress' ? 'selected' : '' }}>In Progress</option>
-                                    <option value="resolved" {{ (form_data.status|default(ticket.status)) == 'resolved' ? 'selected' : '' }}>Resolved</option>
                                     <option value="closed" {{ (form_data.status|default(ticket.status)) == 'closed' ? 'selected' : '' }}>Closed</option>
                                 </select>
                                 <div class="invalid-feedback" id="status-error"></div>

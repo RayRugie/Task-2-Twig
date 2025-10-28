@@ -5,8 +5,7 @@ namespace App\Core;
 /**
  * Session Management Class
  * 
- * Handles user session management with security best practices.
- * Provides methods for login, logout, and session validation.
+ * Handles user session management with Supabase authentication.
  */
 class Session
 {
@@ -59,27 +58,20 @@ class Session
     }
     
     /**
-     * Login user
+     * Login user (store Supabase session info)
      */
-    public static function login(array $user): void
+    public static function login(array $userData): void
     {
         // Regenerate session ID for security
         session_regenerate_id(true);
         
-        // Set user data
-        $_SESSION['user_id'] = $user['id'];
-        $_SESSION['username'] = $user['username'];
-        $_SESSION['email'] = $user['email'];
-        $_SESSION['first_name'] = $user['first_name'];
-        $_SESSION['last_name'] = $user['last_name'];
-        $_SESSION['role'] = $user['role'];
-        $_SESSION['is_active'] = $user['is_active'];
+        // Store user data in session
+        $_SESSION['user_id'] = $userData['id'];
+        $_SESSION['email'] = $userData['email'] ?? '';
+        $_SESSION['access_token'] = $userData['access_token'] ?? '';
+        $_SESSION['refresh_token'] = $userData['refresh_token'] ?? '';
         $_SESSION['login_time'] = time();
         $_SESSION['last_activity'] = time();
-        
-        // Clear any rate limiting
-        Security::clearRateLimit($user['username']);
-        Security::clearRateLimit($user['email']);
     }
     
     /**
@@ -87,6 +79,15 @@ class Session
      */
     public static function logout(): void
     {
+        // Sign out from Supabase
+        try {
+            SupabaseClient::signOut();
+        } catch (\Exception $e) {
+            if (APP_DEBUG) {
+                error_log('Logout error: ' . $e->getMessage());
+            }
+        }
+        
         // Clear all session data
         $_SESSION = [];
         
@@ -108,22 +109,14 @@ class Session
      */
     public static function isLoggedIn(): bool
     {
-        return isset($_SESSION['user_id']) && 
-               isset($_SESSION['login_time']) && 
-               self::isSessionValid();
-    }
-    
-    /**
-     * Check if session is valid (not expired)
-     */
-    public static function isSessionValid(): bool
-    {
-        if (!isset($_SESSION['last_activity'])) {
+        // Check PHP session
+        if (!isset($_SESSION['user_id'])) {
             return false;
         }
         
-        // Check session timeout
-        if (time() - $_SESSION['last_activity'] > SESSION_TIMEOUT) {
+        // Check if session is still valid (not expired)
+        if (!isset($_SESSION['last_activity']) || 
+            (time() - $_SESSION['last_activity'] > SESSION_TIMEOUT)) {
             self::logout();
             return false;
         }
@@ -135,15 +128,23 @@ class Session
     }
     
     /**
+     * Update last activity timestamp
+     */
+    public static function updateActivity(): void
+    {
+        $_SESSION['last_activity'] = time();
+    }
+    
+    /**
      * Get current user ID
      */
-    public static function getUserId(): ?int
+    public static function getUserId(): ?string
     {
         return $_SESSION['user_id'] ?? null;
     }
     
     /**
-     * Get current user data
+     * Get current user data from session
      */
     public static function getUser(): ?array
     {
@@ -151,14 +152,12 @@ class Session
             return null;
         }
         
+        // Return data from session (set during login)
         return [
-            'id' => $_SESSION['user_id'],
-            'username' => $_SESSION['username'],
-            'email' => $_SESSION['email'],
-            'first_name' => $_SESSION['first_name'],
-            'last_name' => $_SESSION['last_name'],
-            'role' => $_SESSION['role'],
-            'is_active' => $_SESSION['is_active']
+            'id' => $_SESSION['user_id'] ?? null,
+            'email' => $_SESSION['email'] ?? '',
+            'access_token' => $_SESSION['access_token'] ?? '',
+            'refresh_token' => $_SESSION['refresh_token'] ?? '',
         ];
     }
     
@@ -167,7 +166,9 @@ class Session
      */
     public static function hasRole(string $role): bool
     {
-        return self::isLoggedIn() && $_SESSION['role'] === $role;
+        // Since Supabase doesn't have built-in roles like MySQL,
+        // we'll check if user is authenticated
+        return self::isLoggedIn();
     }
     
     /**
@@ -175,7 +176,9 @@ class Session
      */
     public static function isAdmin(): bool
     {
-        return self::hasRole('admin');
+        // For now, all authenticated users have same permissions
+        // You can extend this to check a user metadata table
+        return self::isLoggedIn();
     }
     
     /**

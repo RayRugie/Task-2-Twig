@@ -13,12 +13,12 @@ use Twig\Environment;
 abstract class BaseController
 {
     protected $twig;
-    protected Database $db;
+    protected SupabaseDatabase $db;
     
     public function __construct($twig)
     {
         $this->twig = $twig;
-        $this->db = Database::getInstance();
+        $this->db = new SupabaseDatabase();
     }
     
     /**
@@ -149,9 +149,10 @@ abstract class BaseController
     /**
      * Calculate pagination info
      */
-    protected function calculatePagination(int $total, int $page, int $limit): array
+    protected function calculatePagination(?int $total, int $page, int $limit): array
     {
-        $totalPages = ceil($total / $limit);
+        $total = $total ?? 0;
+        $totalPages = $total > 0 ? ceil($total / $limit) : 0;
         
         return [
             'current_page' => $page,

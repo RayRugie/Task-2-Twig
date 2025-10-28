@@ -1,0 +1,163 @@
+.landing-container {
+  max-width: 1440px;
+  margin: 0 auto;
+  overflow-x: hidden;
+  font-family: "Inter", sans-serif;
+  color: #1e1e1e;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem 3rem;
+}
+
+.logo {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #4f46e5;
+}
+
+.nav .btn {
+  margin-left: 1rem;
+  padding: 0.6rem 1.2rem;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  text-decoration: none;
+  display: inline-block;
+}
+
+.nav .btn.login {
+  background: transparent;
+  color: #4f46e5;
+}
+
+.nav .btn.get-started {
+  background: #4f46e5;
+  color: white;
+}
+
+.hero {
+  position: relative;
+  padding: 6rem 3rem;
+  background: linear-gradient(135deg, #4f46e5, #6366f1);
+  color: #f9f9f9;
+  border-bottom-left-radius: 80px;
+  overflow: hidden;
+}
+
+.hero-content {
+  max-width: 600px;
+  z-index: 2;
+  position: relative;
+}
+
+.hero-content h2 {
+  font-size: 3rem;
+  line-height: 1.1;
+}
+
+.hero-content p {
+  margin: 1.5rem 0;
+  font-size: 1.2rem;
+  opacity: 0.9;
+}
+
+.cta-buttons .btn {
+  margin-right: 1rem;
+  padding: 0.8rem 1.5rem;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-block;
+}
+
+.cta-buttons .btn.primary {
+  background: white;
+  color: #4f46e5;
+}
+
+.cta-buttons .btn.secondary {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+}
+
+.decor-circle {
+  position: absolute;
+  width: 180px;
+  height: 180px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  top: 60px;
+  right: 150px;
+}
+
+.hero .wave {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: auto;
+  fill: #f8f8ff;
+}
+
+.features {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 2rem;
+  padding: 6rem 3rem;
+  background: #f8f8ff;
+}
+
+.feature-box {
+  background: white;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+  border-radius: 16px;
+  padding: 2rem;
+  flex: 1 1 300px;
+  max-width: 340px;
+  transition: transform 0.2s ease-in-out;
+}
+
+.feature-box:hover {
+  transform: translateY(-5px);
+}
+
+.feature-box h3 {
+  color: #4f46e5;
+  margin-bottom: 0.8rem;
+}
+
+.feature-box p {
+  color: #555;
+  font-size: 0.95rem;
+}
+
+.footer {
+  text-align: center;
+  padding: 1.5rem;
+  background: #f3f4f6;
+  color: #666;
+  font-size: 0.9rem;
+}
+
+@media (max-width: 768px) {
+  .hero {
+    padding: 4rem 2rem;
+  }
+
+  .hero-content h2 {
+    font-size: 2rem;
+  }
+
+  .features {
+    padding: 4rem 2rem;
+  }
+}
+

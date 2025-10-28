@@ -7,10 +7,15 @@
  */
 
 // Application settings
-define('APP_NAME', 'Ticket Manager');
+define('APP_NAME', 'Ticketa');
 define('APP_VERSION', '1.0.0');
 define('APP_DEBUG', true); // Set to false in production
 define('APP_URL', 'http://localhost:8000'); // Update this for your environment
+
+// Supabase settings
+define('SUPABASE_URL', getenv('SUPABASE_URL') ?: 'https://zarjztnhyohmtqsxwtxx.supabase.co');
+define('SUPABASE_ANON_KEY', getenv('SUPABASE_ANON_KEY') ?: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inphcmp6dG5oeW9obXRxc3h3dHh4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjEyODU1MTksImV4cCI6MjA3Njg2MTUxOX0.axhIv5N0ZhvIH8NpPvX49BSym_CLLhlETo7ZMEz9ypE');
+define('SUPABASE_SERVICE_ROLE_KEY', getenv('SUPABASE_SERVICE_ROLE_KEY') ?: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inphcmp6dG5oeW9obXRxc3h3dHh4Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2MTI4NTUxOSwiZXhwIjoyMDc2ODYxNTE5fQ.e3A5HrDrHV9M-DA2Vb_RJa8DxSKmuRAWf6glrLhtt5o');
 
 // Security settings
 define('CSRF_TOKEN_NAME', '_token');
