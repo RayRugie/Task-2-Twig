@@ -15,7 +15,20 @@ RUN a2enmod rewrite
 # Set working directory
 WORKDIR /var/www/html
 
-# Copy everything into the container
+# Install Composer (copy from official image)
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+
+# Install system deps commonly needed by Composer and PHP libs
+RUN set -eux; \
+    apt-get update; \
+    apt-get install -y --no-install-recommends git unzip; \
+    rm -rf /var/lib/apt/lists/*
+
+# Leverage Docker layer caching: install PHP deps first
+COPY composer.json composer.lock ./
+RUN composer install --no-dev --prefer-dist --no-progress --no-interaction --optimize-autoloader
+
+# Copy the application source
 COPY . .
 
 # Tell Apache to look in the public folder for the site
