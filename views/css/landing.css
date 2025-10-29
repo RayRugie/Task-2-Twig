@@ -97,6 +97,17 @@
   right: 150px;
 }
 
+.decor-circle1 {
+  position: absolute;
+  width: 180px;
+  height: 180px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  top: 90px;
+  right: 190px;
+  z-index: 2;
+}
+
 .hero .wave {
   position: absolute;
   bottom: 0;
