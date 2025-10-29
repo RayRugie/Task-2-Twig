@@ -239,6 +239,147 @@ class SupabaseDatabase
             return 0;
         }
     }
+
+    /**
+     * Count records via Supabase REST endpoint using HTTP headers (content-range)
+     * This avoids issues in the PostgREST PHP client.
+     */
+    public function countRest(string $table, array $filters = []): int
+    {
+        try {
+            $baseUrl = rtrim(SUPABASE_URL, '/');
+            $url = $baseUrl . '/rest/v1/' . rawurlencode($table) . '?select=*';
+
+            // Build filter query params (eq operator)
+            $queryParts = [];
+            foreach ($filters as $column => $value) {
+                // Encode values safely; PostgREST expects 'eq.' prefix
+                $queryParts[] = rawurlencode($column) . '=eq.' . rawurlencode((string)$value);
+            }
+            if (!empty($queryParts)) {
+                $url .= '&' . implode('&', $queryParts);
+            }
+
+            // Use Range: 0-0 to minimize payload; Prefer: count=exact to get total
+            $headers = [
+                'apikey: ' . SUPABASE_ANON_KEY,
+                'Authorization: Bearer ' . ($this->setAuthHeader() ?: SUPABASE_ANON_KEY),
+                'Accept: application/json',
+                'Prefer: count=exact',
+                'Range: 0-0'
+            ];
+
+            $context = stream_context_create([
+                'http' => [
+                    'method' => 'GET',
+                    'header' => implode("\r\n", $headers),
+                    'ignore_errors' => true,
+                    'timeout' => 10,
+                ],
+            ]);
+
+            $result = @file_get_contents($url, false, $context);
+
+            // Parse headers for content-range
+            $count = null;
+            if (isset($http_response_header) && is_array($http_response_header)) {
+                foreach ($http_response_header as $hdr) {
+                    if (stripos($hdr, 'content-range:') === 0) {
+                        // Format: content-range: 0-0/123
+                        $parts = explode('/', trim(substr($hdr, strpos($hdr, ':') + 1)));
+                        if (count($parts) === 2) {
+                            $total = trim($parts[1]);
+                            if (is_numeric($total)) {
+                                $count = (int)$total;
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Fallback: count decoded rows if header missing
+            if ($count === null) {
+                $data = @json_decode((string)$result, true);
+                $count = is_array($data) ? count($data) : 0;
+            }
+
+            return $count ?? 0;
+        } catch (\Throwable $e) {
+            if (APP_DEBUG) {
+                error_log('REST count error: ' . $e->getMessage());
+            }
+            return 0;
+        }
+    }
+
+    /**
+     * Fetch rows via Supabase REST with filters, ordering, pagination
+     */
+    public function fetchRest(
+        string $table,
+        array $filters = [],
+        ?string $orderBy = null,
+        bool $ascending = false,
+        ?int $limit = null,
+        ?int $offset = null,
+        string $select = "*"
+    ): array {
+        try {
+            $baseUrl = rtrim(SUPABASE_URL, '/');
+            $url = $baseUrl . '/rest/v1/' . rawurlencode($table) . '?select=' . rawurlencode($select);
+
+            // Filters
+            $queryParts = [];
+            foreach ($filters as $column => $value) {
+                $queryParts[] = rawurlencode($column) . '=eq.' . rawurlencode((string)$value);
+            }
+            if (!empty($queryParts)) {
+                $url .= '&' . implode('&', $queryParts);
+            }
+
+            // Order
+            if ($orderBy) {
+                $url .= '&order=' . rawurlencode($orderBy) . '.' . ($ascending ? 'asc' : 'desc');
+            }
+
+            // Range from offset/limit
+            $rangeHeader = null;
+            if ($limit !== null) {
+                $start = max(0, (int)($offset ?? 0));
+                $end = $start + max(0, (int)$limit) - 1;
+                $rangeHeader = 'Range: ' . $start . '-' . $end;
+            }
+
+            $headers = [
+                'apikey: ' . SUPABASE_ANON_KEY,
+                'Authorization: Bearer ' . ($this->setAuthHeader() ?: SUPABASE_ANON_KEY),
+                'Accept: application/json',
+            ];
+            if ($rangeHeader) {
+                $headers[] = $rangeHeader;
+            }
+
+            $context = stream_context_create([
+                'http' => [
+                    'method' => 'GET',
+                    'header' => implode("\r\n", $headers),
+                    'ignore_errors' => true,
+                    'timeout' => 15,
+                ],
+            ]);
+
+            $result = @file_get_contents($url, false, $context);
+            $data = @json_decode((string)$result, true);
+
+            return is_array($data) ? $data : [];
+        } catch (\Throwable $e) {
+            if (APP_DEBUG) {
+                error_log('REST fetch error: ' . $e->getMessage());
+            }
+            return [];
+        }
+    }
     
     /**
      * Execute raw SQL query for UPDATE

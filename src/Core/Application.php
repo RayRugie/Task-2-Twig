@@ -66,6 +66,7 @@ class Application
         $this->twig->addGlobal('app_version', APP_VERSION);
         $this->twig->addGlobal('user', Session::getUser());
         $this->twig->addGlobal('csrf_token', Security::generateCSRFToken());
+        $this->twig->addGlobal('csrf_token_name', CSRF_TOKEN_NAME);
         $this->twig->addGlobal('flash_messages', Session::getAllFlashes());
     }
     

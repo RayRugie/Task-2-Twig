@@ -19,17 +19,31 @@ class SupabaseClient
     public static function getInstance()
     {
         if (self::$instance === null) {
-            // Extract project reference ID from SUPABASE_URL
-            // Format: https://xyzabc.supabase.co -> xyzabc
-            $url = SUPABASE_URL;
-            $url = str_replace(['https://', 'http://'], '', $url);
-            $parts = explode('.', $url);
-            $referenceId = $parts[0];
-            
-            self::$instance = new Supabase(
-                SUPABASE_ANON_KEY,
-                $referenceId
-            );
+            // Validate environment configuration
+            $supabaseUrl = trim(SUPABASE_URL);
+            $anonKey = trim(SUPABASE_ANON_KEY);
+
+            if ($supabaseUrl === '' || $anonKey === '') {
+                throw new \RuntimeException('Supabase is not configured. Please set SUPABASE_URL and SUPABASE_ANON_KEY in your .env');
+            }
+
+            // Parse and validate SUPABASE_URL
+            $parsed = parse_url($supabaseUrl);
+            $host = $parsed['host'] ?? '';
+
+            // Accept only project hosts like *.supabase.co
+            if ($host === 'supabase.com' || !str_ends_with($host, '.supabase.co')) {
+                throw new \RuntimeException('Invalid SUPABASE_URL. Expected format: https://<project-ref>.supabase.co');
+            }
+
+            // Extract project ref from host: <project-ref>.supabase.co
+            $parts = explode('.', $host);
+            $referenceId = $parts[0] ?? '';
+            if ($referenceId === '') {
+                throw new \RuntimeException('Could not extract project reference from SUPABASE_URL');
+            }
+
+            self::$instance = new Supabase($anonKey, $referenceId);
         }
         
         return self::$instance;

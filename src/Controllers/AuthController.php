@@ -5,6 +5,7 @@ namespace App\Controllers;
 use App\Core\BaseController;
 use App\Core\SupabaseClient;
 use App\Core\Session;
+use App\Core\Security;
 
 /**
  * Authentication Controller
@@ -33,29 +34,78 @@ class AuthController extends BaseController
      */
     public function login(): void
     {
+        // Validate CSRF token
+        $this->requireCSRF();
+        
         $data = $this->sanitizeInput($this->getPostData());
         
         // Validate required fields
         if (empty($data['email']) || empty($data['password'])) {
             Session::setFlash('error', 'Email and password are required.');
             $this->redirect('/login');
+            return;
         }
         
         try {
             // Sign in with Supabase
             $response = SupabaseClient::signIn($data['email'], $data['password']);
             
-            if (isset($response['data']) && !isset($response['error'])) {
+            // Log response for debugging (remove in production)
+            if (APP_DEBUG) {
+                error_log('Supabase login response: ' . print_r($response, true));
+            }
+            
+            // Check if there's an error in the response
+            if (isset($response['error']) && $response['error'] !== null) {
+                $error = $response['error'];
+                $errorMsg = ($error instanceof \Exception) ? $error->getMessage() : 'Invalid email or password.';
+                
+                if (APP_DEBUG) {
+                    error_log('Login error from Supabase: ' . $errorMsg);
+                }
+                
+                Session::setFlash('error', $errorMsg);
+                $this->redirect('/login');
+                return;
+            }
+            
+            // Check if we have data - Supabase returns ['data' => [...auth data...], 'error' => null]
+            if (isset($response['data']) && is_array($response['data'])) {
                 $authData = $response['data'];
                 
-                // Extract user info
+                // Supabase signInWithPassword returns data in this structure:
+                // - access_token, refresh_token, expires_in, token_type at top level
+                // - user object separately
+                // - session object containing user and tokens
                 $accessToken = $authData['access_token'] ?? null;
                 $user = $authData['user'] ?? null;
                 
-                if ($accessToken && $user) {
+                // If user not at top level, check session object
+                if (!$user && isset($authData['session']['user'])) {
+                    $user = $authData['session']['user'];
+                }
+                
+                // Fallback: if we have token but no user object, log warning
+                if ($accessToken && !$user) {
+                    if (APP_DEBUG) {
+                        error_log('Warning: Access token received but no user object in response. Full response: ' . json_encode($authData));
+                    }
+                    // Without user ID, we can't fully authenticate, but we'll proceed with email
+                    // This might happen if Supabase API response structure is different
+                }
+                
+                if ($accessToken) {
+                    // Ensure we have at least email
+                    $userEmail = $user['email'] ?? $data['email'];
+                    $userId = $user['id'] ?? null;
+                    
+                    if (!$userId && APP_DEBUG) {
+                        error_log('Warning: No user ID in response, login may have limited functionality');
+                    }
+                    
                     $userData = [
-                        'id' => $user['id'] ?? null,
-                        'email' => $user['email'] ?? null,
+                        'id' => $userId,
+                        'email' => $userEmail,
                         'access_token' => $accessToken,
                         'refresh_token' => $authData['refresh_token'] ?? '',
                     ];
@@ -63,20 +113,36 @@ class AuthController extends BaseController
                     // Store user session
                     Session::login($userData);
                     
+                    // Clear any rate limiting
+                    Security::clearRateLimit($data['email']);
+                    
                     Session::setFlash('success', 'Welcome back!');
                     $this->redirect('/dashboard');
-                } else {
-                    Session::setFlash('error', 'Invalid email or password.');
-                    $this->redirect('/login');
+                    return;
                 }
-            } else {
-                $errorMsg = isset($response['error']) ? $response['error']->getMessage() : 'Invalid email or password.';
-                Session::setFlash('error', $errorMsg);
-                $this->redirect('/login');
             }
+            
+            // If we get here, login failed (no access token)
+            if (APP_DEBUG) {
+                error_log('Login failed: No access token in response. Response: ' . json_encode($response));
+            }
+            Session::setFlash('error', 'Invalid email or password.');
+            $this->redirect('/login');
         } catch (\Exception $e) {
-            error_log('Login error: ' . $e->getMessage());
-            Session::setFlash('error', 'An error occurred during login. Please try again.');
+            error_log('Login exception: ' . $e->getMessage());
+            if (APP_DEBUG) {
+                error_log('Login exception trace: ' . $e->getTraceAsString());
+            }
+            
+            $errorMsg = $e->getMessage();
+            // Make error message user-friendly
+            if (strpos($errorMsg, 'Invalid login credentials') !== false || 
+                strpos($errorMsg, 'Email not confirmed') !== false ||
+                strpos($errorMsg, 'invalid') !== false) {
+                Session::setFlash('error', $errorMsg);
+            } else {
+                Session::setFlash('error', 'An error occurred during login. Please check your credentials and try again.');
+            }
             $this->redirect('/login');
         }
     }

@@ -22,30 +22,60 @@ class TicketController extends BaseController
         $this->requireAuth();
         
         $user = $this->getCurrentUser();
-        
+
+        // Query params: status filter, pagination, sort
+        $status = $_GET['status'] ?? '';
+        $page = max(1, (int)($_GET['page'] ?? 1));
+        $perPage = max(1, min(20, (int)($_GET['per_page'] ?? 10)));
+        $offset = ($page - 1) * $perPage;
+
+        // Build filters
+        $filters = ['email' => $user['email']];
+        if (in_array($status, ['open', 'in_progress', 'closed', 'resolved'], true)) {
+            $filters['status'] = $status;
+        }
+
         try {
-            // Fetch tickets for this user with explicit SQL (like React: .eq("email", userEmail))
-            $tickets = $this->db->fetchAll(
-                'SELECT * FROM tickets WHERE email = ? ORDER BY created_at DESC',
-                [$user['email']]
-            );
-            
-            if (APP_DEBUG && empty($tickets)) {
-                error_log('No tickets found for user: ' . $user['email']);
-            }
-            
-        } catch (\Exception $e) {
+            // Total for pagination
+            $total = $this->db->countRest('tickets', $filters);
+
+            // Fetch page of tickets ordered by created_at desc
+            $tickets = $this->db->fetchRest('tickets', $filters, 'created_at', false, $perPage, $offset, '*');
+
+            $totalPages = $total > 0 ? (int)ceil($total / $perPage) : 1;
+
+            $this->render('tickets/index.twig', [
+                'title' => 'Ticket Management',
+                'tickets' => $tickets,
+                'filter_status' => $status,
+                'pagination' => [
+                    'page' => $page,
+                    'per_page' => $perPage,
+                    'total' => $total,
+                    'total_pages' => $totalPages,
+                    'has_prev' => $page > 1,
+                    'has_next' => $page < $totalPages,
+                ],
+            ]);
+        } catch (\Throwable $e) {
             if (APP_DEBUG) {
                 error_log('TicketController index error: ' . $e->getMessage());
             }
-            $tickets = [];
             Session::setFlash('error', 'Failed to load tickets.');
+            $this->render('tickets/index.twig', [
+                'title' => 'Ticket Management',
+                'tickets' => [],
+                'filter_status' => $status,
+                'pagination' => [
+                    'page' => 1,
+                    'per_page' => $perPage,
+                    'total' => 0,
+                    'total_pages' => 1,
+                    'has_prev' => false,
+                    'has_next' => false,
+                ],
+            ]);
         }
-        
-        $this->render('tickets/index.twig', [
-            'title' => 'Ticket Management',
-            'tickets' => $tickets
-        ]);
     }
     
     /**
