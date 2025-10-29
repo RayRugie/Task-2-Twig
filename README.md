@@ -62,6 +62,10 @@ php -S localhost:8000 -t public
 
 Visit `http://localhost:8000` in your browser.
 
+login details
+email: admin@gmail.com
+password: admin001
+
 ## 🎯 Features
 
 ### 1. Landing Page ✅
