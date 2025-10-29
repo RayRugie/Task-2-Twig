@@ -1,5 +1,14 @@
 FROM php:8.2-apache
 
+# Upgrade OS packages to pick up security fixes (fixes high vulnerability)
+RUN set -eux; \
+    apt-get update; \
+    apt-get -y upgrade; \
+    apt-get -y dist-upgrade; \
+    apt-get -y autoremove; \
+    apt-get clean; \
+    rm -rf /var/lib/apt/lists/*
+
 # Enable rewrite module for .htaccess
 RUN a2enmod rewrite
 
