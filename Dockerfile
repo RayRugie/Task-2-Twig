@@ -25,7 +25,8 @@ RUN set -eux; \
     rm -rf /var/lib/apt/lists/*
 
 # Leverage Docker layer caching: install PHP deps first
-COPY composer.json composer.lock ./
+# Use glob so build doesn't fail if composer.lock is absent in repo
+COPY composer.* ./
 RUN composer install --no-dev --prefer-dist --no-progress --no-interaction --optimize-autoloader
 
 # Copy the application source
