@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: my-twig-app
+    env: docker
+    repo: https://github.com/RayRugie/Task-2-Twig
+    branch: main
+    plan: free
+    buildCommand: ""
+    startCommand: ""
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: DATABASE_URL
+        value: ${DATABASE_URL}
+    autoDeploy: true
