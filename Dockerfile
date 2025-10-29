@@ -14,7 +14,6 @@ RUN apt-get update \
     libicu-dev \
     libpng-dev \
     libjpeg-dev \
-    libpng-dev \
  && docker-php-ext-install zip intl pdo pdo_mysql mbstring opcache \
  && docker-php-ext-configure gd --with-jpeg \
  && docker-php-ext-install gd \
@@ -35,8 +34,18 @@ RUN composer install --no-dev --prefer-dist --no-interaction --no-progress --opt
 # Copy application code
 COPY . /var/www/html
 
-# Ensure var/cache and var/logs (or storage) have proper permissions if used
-# Adjust folder names to match your app (e.g., var, storage)
+# 🔧 Set Apache DocumentRoot to the public directory
+RUN sed -i 's#/var/www/html#/var/www/html/public#g' /etc/apache2/sites-available/000-default.conf \
+ && sed -i 's#/var/www/html#/var/www/html/public#g' /etc/apache2/apache2.conf
+
+# 🔧 Allow .htaccess overrides and grant access to public directory
+RUN echo '<Directory /var/www/html/public>\n\
+    AllowOverride All\n\
+    Require all granted\n\
+</Directory>' > /etc/apache2/conf-available/app.conf \
+ && a2enconf app
+
+# Ensure proper permissions
 RUN chown -R www-data:www-data /var/www/html \
  && chmod -R 755 /var/www/html
 
