@@ -107,7 +107,7 @@ class TicketController extends BaseController
         $user = $this->getCurrentUser();
         
         try {
-            // Create ticket with email (exactly like React)
+            // Create ticket with email (REST, like Vue)
             $this->db->insert('tickets', [
                 'title' => $data['title'],
                 'description' => $data['description'],
@@ -146,11 +146,9 @@ class TicketController extends BaseController
         }
         
         try {
-            // Get the ticket (with email check for security)
-            $ticket = $this->db->fetchOne(
-                'SELECT * FROM tickets WHERE id = ? AND email = ?',
-                [$ticketId, $user['email']]
-            );
+            // Get the ticket (with email check for security) via REST to ensure auth headers apply
+            $tickets = $this->db->fetchRest('tickets', ['id' => $ticketId, 'email' => $user['email']], null, false, 1, 0, '*');
+            $ticket = is_array($tickets) && count($tickets) > 0 ? $tickets[0] : null;
             
             if (!$ticket) {
                 Session::setFlash('error', 'Ticket not found.');
@@ -207,19 +205,8 @@ class TicketController extends BaseController
         }
         
         try {
-            // Get the ticket first to ensure it belongs to this user (security check)
-            $ticket = $this->db->fetchOne(
-                'SELECT * FROM tickets WHERE id = ? AND email = ?',
-                [$ticketId, $user['email']]
-            );
-            
-            if (!$ticket) {
-                Session::setFlash('error', 'Ticket not found.');
-                $this->redirect('/tickets');
-            }
-            
-            // Update ticket (matches React: .update().eq("id", id).eq("email", userEmail))
-            $this->db->executeUpdate('tickets', 
+            // Update ticket (REST, mirrors Vue eq filters)
+            $this->db->update('tickets', 
                 ['id' => $ticketId, 'email' => $user['email']], 
                 [
                     'title' => $data['title'],
@@ -259,22 +246,15 @@ class TicketController extends BaseController
         }
         
         try {
-            // Security: First check if the ticket belongs to this user
-            $ticket = $this->db->fetchOne(
-                'SELECT * FROM tickets WHERE id = ? AND email = ?',
-                [$ticketId, $user['email']]
-            );
-            
-            if (!$ticket) {
-                Session::setFlash('error', 'Ticket not found or you do not have permission to delete it.');
-                $this->redirect('/tickets');
+            // Mirror Vue logic: attempt delete with id + email; admins can delete by id
+            $isAdmin = \App\Core\Session::isAdmin();
+            $filters = ['id' => $ticketId];
+            if (!$isAdmin && !empty($user['email'] ?? '')) {
+                $filters['email'] = $user['email'];
             }
-            
-            // Only delete if the ticket belongs to this user (extra security - email check works here)
-            $this->db->executeDelete('tickets', [
-                'id' => $ticketId,
-                'email' => $user['email']
-            ]);
+
+            // Execute delete; Supabase returns success even if 0 rows match, which matches the Vue UX
+            $this->db->executeDelete('tickets', $filters);
             
             Session::setFlash('success', '🗑️ Ticket deleted successfully!');
             

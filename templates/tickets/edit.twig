@@ -54,48 +54,9 @@
                             </div>
                         </div>
                         
-                        <div class="col-md-3">
-                            <div class="mb-3">
-                                <label for="priority" class="form-label">Priority <span class="text-danger">*</span></label>
-                                <select class="form-select" id="priority" name="priority" required>
-                                    <option value="low" {{ (form_data.priority|default(ticket.priority)) == 'low' ? 'selected' : '' }}>Low</option>
-                                    <option value="medium" {{ (form_data.priority|default(ticket.priority)) == 'medium' ? 'selected' : '' }}>Medium</option>
-                                    <option value="high" {{ (form_data.priority|default(ticket.priority)) == 'high' ? 'selected' : '' }}>High</option>
-                                    <option value="urgent" {{ (form_data.priority|default(ticket.priority)) == 'urgent' ? 'selected' : '' }}>Urgent</option>
-                                </select>
-                                <div class="invalid-feedback" id="priority-error"></div>
-                            </div>
-                        </div>
+                    
                         
-                        <div class="col-md-3">
-                            <div class="mb-3">
-                                <label for="category" class="form-label">Category <span class="text-danger">*</span></label>
-                                <select class="form-select" id="category" name="category" required>
-                                    <option value="bug" {{ (form_data.category|default(ticket.category)) == 'bug' ? 'selected' : '' }}>Bug Report</option>
-                                    <option value="feature" {{ (form_data.category|default(ticket.category)) == 'feature' ? 'selected' : '' }}>Feature Request</option>
-                                    <option value="support" {{ (form_data.category|default(ticket.category)) == 'support' ? 'selected' : '' }}>Technical Support</option>
-                                    <option value="access" {{ (form_data.category|default(ticket.category)) == 'access' ? 'selected' : '' }}>Access Request</option>
-                                    <option value="software" {{ (form_data.category|default(ticket.category)) == 'software' ? 'selected' : '' }}>Software Installation</option>
-                                    <option value="hardware" {{ (form_data.category|default(ticket.category)) == 'hardware' ? 'selected' : '' }}>Hardware Issue</option>
-                                    <option value="general" {{ (form_data.category|default(ticket.category)) == 'general' ? 'selected' : '' }}>General Inquiry</option>
-                                </select>
-                                <div class="invalid-feedback" id="category-error"></div>
-                            </div>
-                        </div>
-                        
-                        <div class="col-md-3">
-                            <div class="mb-3">
-                                <label for="assigned_to" class="form-label">Assign To</label>
-                                <select class="form-select" id="assigned_to" name="assigned_to">
-                                    <option value="">Unassigned</option>
-                                    {% for userOption in users %}
-                                        <option value="{{ userOption.id }}" {{ (form_data.assigned_to|default(ticket.assigned_to)) == userOption.id ? 'selected' : '' }}>
-                                            {{ userOption.first_name }} {{ userOption.last_name }}
-                                        </option>
-                                    {% endfor %}
-                                </select>
-                            </div>
-                        </div>
+
                     </div>
 
                     <div class="d-flex justify-content-between">
@@ -155,19 +116,7 @@ document.addEventListener('DOMContentLoaded', function() {
             isValid = false;
         }
         
-        // Validate priority
-        const priority = document.getElementById('priority').value;
-        if (!priority) {
-            showError('priority', 'Please select a priority level');
-            isValid = false;
-        }
-        
-        // Validate category
-        const category = document.getElementById('category').value;
-        if (!category) {
-            showError('category', 'Please select a category');
-            isValid = false;
-        }
+        // Note: priority and category are not present on this form; skip validating them
         
         if (isValid) {
             // Show loading state

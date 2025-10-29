@@ -63,7 +63,10 @@
 
                     <div class="actions">
                         <a href="/tickets/{{ ticket.id }}/edit" class="edit-btn">✏️ Edit</a>
-                        <a href="/tickets/{{ ticket.id }}/delete" class="delete-btn" onclick="return confirm('Are you sure?')">🗑️ Delete</a>
+                        <form method="POST" action="/tickets/{{ ticket.id }}/delete" style="display:inline;" onsubmit="return confirm('Are you sure?')">
+                            <input type="hidden" name="{{ csrf_token_name }}" value="{{ csrf_token }}">
+                            <button type="submit" class="delete-btn">🗑️ Delete</button>
+                        </form>
                     </div>
                 </div>
                 {% endfor %}

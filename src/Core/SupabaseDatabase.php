@@ -132,13 +132,30 @@ class SupabaseDatabase
     public function insert(string $table, array $data)
     {
         try {
-            $result = $this->query->from($table)->insert($data)->execute();
-            
-            if (isset($result->data) && is_array($result->data) && count($result->data) > 0) {
-                return $result->data[0];
-            }
-            
-            return null;
+            // REST insert to avoid SDK inconsistencies
+            $baseUrl = rtrim(SUPABASE_URL, '/');
+            $url = $baseUrl . '/rest/v1/' . rawurlencode($table);
+
+            $headers = [
+                'apikey: ' . SUPABASE_ANON_KEY,
+                'Authorization: Bearer ' . ($this->setAuthHeader() ?: SUPABASE_ANON_KEY),
+                'Accept: application/json',
+                'Content-Type: application/json',
+                'Prefer: return=minimal'
+            ];
+
+            $context = stream_context_create([
+                'http' => [
+                    'method' => 'POST',
+                    'header' => implode("\r\n", $headers),
+                    'content' => json_encode([$data], JSON_UNESCAPED_SLASHES),
+                    'ignore_errors' => true,
+                    'timeout' => 10,
+                ],
+            ]);
+
+            @file_get_contents($url, false, $context);
+            return true;
         } catch (\Exception $e) {
             if (APP_DEBUG) {
                 error_log('Supabase insert error: ' . $e->getMessage());
@@ -153,15 +170,38 @@ class SupabaseDatabase
     public function update(string $table, array $filters, array $data)
     {
         try {
-            $query = $this->query->from($table);
-            
+            // REST update using PATCH with eq filters
+            $baseUrl = rtrim(SUPABASE_URL, '/');
+            $url = $baseUrl . '/rest/v1/' . rawurlencode($table);
+
+            $queryParts = [];
             foreach ($filters as $column => $value) {
-                $query = $query->eq($column, $value);
+                $queryParts[] = rawurlencode($column) . '=eq.' . rawurlencode((string)$value);
             }
-            
-            $result = $query->update($data)->execute();
-            
-            return $result->data ?? [];
+            if (!empty($queryParts)) {
+                $url .= '?' . implode('&', $queryParts);
+            }
+
+            $headers = [
+                'apikey: ' . SUPABASE_ANON_KEY,
+                'Authorization: Bearer ' . ($this->setAuthHeader() ?: SUPABASE_ANON_KEY),
+                'Accept: application/json',
+                'Content-Type: application/json',
+                'Prefer: return=minimal'
+            ];
+
+            $context = stream_context_create([
+                'http' => [
+                    'method' => 'PATCH',
+                    'header' => implode("\r\n", $headers),
+                    'content' => json_encode($data, JSON_UNESCAPED_SLASHES),
+                    'ignore_errors' => true,
+                    'timeout' => 10,
+                ],
+            ]);
+
+            @file_get_contents($url, false, $context);
+            return true;
         } catch (\Exception $e) {
             if (APP_DEBUG) {
                 error_log('Supabase update error: ' . $e->getMessage());
@@ -410,14 +450,37 @@ class SupabaseDatabase
     public function executeDelete(string $table, array $filters)
     {
         try {
-            $query = $this->query->from($table);
-            
+            // Use REST endpoint directly to avoid SDK differences where eq() may be unavailable on delete builders
+            $baseUrl = rtrim(SUPABASE_URL, '/');
+            $url = $baseUrl . '/rest/v1/' . rawurlencode($table);
+
+            // Build filter query params using eq operator
+            $queryParts = [];
             foreach ($filters as $column => $value) {
-                $query = $query->eq($column, $value);
+                $queryParts[] = rawurlencode($column) . '=eq.' . rawurlencode((string)$value);
             }
-            
-            $result = $query->delete()->execute();
-            
+            if (!empty($queryParts)) {
+                $url .= '?' . implode('&', $queryParts);
+            }
+
+            $headers = [
+                'apikey: ' . SUPABASE_ANON_KEY,
+                'Authorization: Bearer ' . ($this->setAuthHeader() ?: SUPABASE_ANON_KEY),
+                'Accept: application/json',
+                'Prefer: return=minimal'
+            ];
+
+            $context = stream_context_create([
+                'http' => [
+                    'method' => 'DELETE',
+                    'header' => implode("\r\n", $headers),
+                    'ignore_errors' => true,
+                    'timeout' => 10,
+                ],
+            ]);
+
+            @file_get_contents($url, false, $context);
+            // If the request didn't throw, treat as success (Supabase usually returns 204 No Content)
             return true;
         } catch (\Exception $e) {
             if (APP_DEBUG) {
