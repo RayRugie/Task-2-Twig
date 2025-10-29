@@ -11,12 +11,14 @@
   justify-content: space-between;
   align-items: center;
   padding: 1.5rem 3rem;
+  background: #1e1e1e; /* slate-900 */
+  color: #e5e7eb; /* text-gray-200 */
 }
 
 .logo {
   font-size: 1.5rem;
   font-weight: 700;
-  color: #4f46e5;
+  color: #e5e7eb;
 }
 
 .nav .btn {
@@ -30,9 +32,21 @@
   display: inline-block;
 }
 
+/* Force header nav items to stay on one line */
+.nav {
+  display: flex;
+  flex-wrap: nowrap !important;
+  gap: 0.5rem;
+}
+
+.nav .btn:hover {
+  font-weight: 800;
+}
+
 .nav .btn.login {
   background: transparent;
-  color: #4f46e5;
+  color: #e5e7eb;
+  /* border: 1px solid rgba(229, 231, 235, 0.3); */
 }
 
 .nav .btn.get-started {
@@ -96,6 +110,16 @@
   top: 60px;
   right: 150px;
 }
+.decor-circle1 {
+  position: absolute;
+  width: 180px;
+  height: 180px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  top: 90px;
+  right: 190px;
+  z-index: 2;
+}
 
 .hero .wave {
   position: absolute;
@@ -148,6 +172,20 @@
 }
 
 @media (max-width: 768px) {
+  .header {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-self: start;
+    background: #1e1e1e; /* slate-900 */
+    color: #e5e7eb; /* text-gray-200 */
+  }
+
+  .nav .btn {
+    display: flex;
+    flex-direction: row;
+    font-size: small;
+  }
   .hero {
     padding: 4rem 2rem;
   }
