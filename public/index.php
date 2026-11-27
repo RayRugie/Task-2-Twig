@@ -1,3 +1,7 @@
+if (!defined('STDERR')) {
+    define('STDERR', fopen('php://stderr', 'w'));
+}
+
 <?php
 /**
  * Front Controller - Entry point for the ticket management application
