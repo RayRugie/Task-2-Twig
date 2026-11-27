@@ -1,6 +1,4 @@
-if (!defined('STDERR')) {
-    define('STDERR', fopen('php://stderr', 'w'));
-}
+
 
 <?php
 /**
@@ -9,6 +7,9 @@ if (!defined('STDERR')) {
  * This file handles all incoming requests and routes them to appropriate controllers.
  * It also initializes the application environment, database connection, and Twig templating.
  */
+if (!defined('STDERR')) {
+    define('STDERR', fopen('php://stderr', 'w'));
+}
 
 // Start output buffering to prevent any accidental output
 ob_start();
